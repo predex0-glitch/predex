@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { criarCondominio } from "@/lib/condominios";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 function extrairBearerToken(authHeader: string | null): string | null {
   if (!authHeader?.startsWith("Bearer ")) {
@@ -12,6 +12,23 @@ function extrairBearerToken(authHeader: string | null): string | null {
 }
 
 export async function POST(request: Request) {
+  // O client está sem schema tipado por enquanto.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let supabase: any;
+  try {
+    supabase = getSupabase();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        erro:
+          error instanceof Error
+            ? error.message
+            : "Supabase não configurado.",
+      },
+      { status: 500 },
+    );
+  }
+
   const token = extrairBearerToken(request.headers.get("authorization"));
   if (!token) {
     return NextResponse.json(

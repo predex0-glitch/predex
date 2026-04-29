@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
-import { supabaseBrowser } from "@/lib/supabase-browser";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 type EstadoCriacao = "idle" | "enviando" | "sucesso" | "erro";
 
@@ -16,6 +16,15 @@ export default function SindicoPage() {
     event.preventDefault();
     setEstado("enviando");
     setFeedback("");
+
+    let supabaseBrowser;
+    try {
+      supabaseBrowser = getSupabaseBrowser();
+    } catch (error) {
+      setEstado("erro");
+      setFeedback(error instanceof Error ? error.message : "Supabase não configurado.");
+      return;
+    }
 
     const {
       data: { session },

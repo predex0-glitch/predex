@@ -1,9 +1,22 @@
 import { Chamado } from "@/types/chamado";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 type NovoChamado = Pick<Chamado, "nome" | "apartamento" | "mensagem">;
+type ChamadoRow = {
+  id: string;
+  nome: string;
+  apartamento: string;
+  mensagem: string;
+  status: Chamado["status"];
+  created_at: string;
+};
 
 export async function listarChamados(): Promise<Chamado[]> {
+  // Supabase sem schema tipado retorna tabelas como `never` no build.
+  // Este cast é intencional até adicionarmos tipos gerados do banco.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = getSupabase() as any;
+
   const { data, error } = await supabase
     .from("chamados")
     .select("id, nome, apartamento, mensagem, status, created_at")
@@ -13,7 +26,7 @@ export async function listarChamados(): Promise<Chamado[]> {
     throw new Error(`Erro ao listar chamados: ${error.message}`);
   }
 
-  return (data ?? []).map((item) => ({
+  return ((data ?? []) as ChamadoRow[]).map((item) => ({
     id: item.id,
     nome: item.nome,
     apartamento: item.apartamento,
@@ -24,6 +37,11 @@ export async function listarChamados(): Promise<Chamado[]> {
 }
 
 export async function criarChamado(dados: NovoChamado): Promise<Chamado> {
+  // Supabase sem schema tipado retorna tabelas como `never` no build.
+  // Este cast é intencional até adicionarmos tipos gerados do banco.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = getSupabase() as any;
+
   const { data, error } = await supabase
     .from("chamados")
     .insert({
@@ -39,12 +57,14 @@ export async function criarChamado(dados: NovoChamado): Promise<Chamado> {
     throw new Error(`Erro ao criar chamado: ${error.message}`);
   }
 
+  const item = data as ChamadoRow;
+
   return {
-    id: data.id,
-    nome: data.nome,
-    apartamento: data.apartamento,
-    mensagem: data.mensagem,
-    status: data.status,
-    criadoEm: data.created_at,
+    id: item.id,
+    nome: item.nome,
+    apartamento: item.apartamento,
+    mensagem: item.mensagem,
+    status: item.status,
+    criadoEm: item.created_at,
   };
 }

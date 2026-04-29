@@ -1,11 +1,18 @@
 import { randomInt } from "crypto";
 
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { Condominio } from "@/types/condominio";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const CODE_LENGTH = 6;
 const MAX_ATTEMPTS = 10;
+type CondominioRow = {
+  id: string;
+  nome: string;
+  codigo: string;
+  user_id: string;
+  created_at: string;
+};
 
 function gerarCodigoCondominio(): string {
   let codigo = "";
@@ -22,6 +29,11 @@ export async function criarCondominio(
   nome: string,
   userId: string,
 ): Promise<Condominio> {
+  // Supabase sem schema tipado retorna tabelas como `never` no build.
+  // Este cast é intencional até adicionarmos tipos gerados do banco.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = getSupabase() as any;
+
   for (let tentativa = 0; tentativa < MAX_ATTEMPTS; tentativa += 1) {
     const codigo = gerarCodigoCondominio();
 
@@ -36,12 +48,14 @@ export async function criarCondominio(
       .single();
 
     if (!error && data) {
+      const item = data as CondominioRow;
+
       return {
-        id: data.id,
-        nome: data.nome,
-        codigo: data.codigo,
-        userId: data.user_id,
-        createdAt: data.created_at,
+        id: item.id,
+        nome: item.nome,
+        codigo: item.codigo,
+        userId: item.user_id,
+        createdAt: item.created_at,
       };
     }
 
