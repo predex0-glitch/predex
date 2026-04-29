@@ -68,3 +68,38 @@ export async function criarCondominio(
 
   throw new Error("Nao foi possivel gerar um codigo unico para o condominio.");
 }
+
+export async function buscarCondominioPorCodigo(
+  codigo: string,
+): Promise<Condominio | null> {
+  // Supabase sem schema tipado retorna tabelas como `never` no build.
+  // Este cast é intencional até adicionarmos tipos gerados do banco.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = getSupabase() as any;
+
+  const codigoNormalizado = codigo.trim().toUpperCase();
+
+  const { data, error } = await supabase
+    .from("condominios")
+    .select("id, nome, codigo, user_id, created_at")
+    .eq("codigo", codigoNormalizado)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Erro ao buscar condominio: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const item = data as CondominioRow;
+
+  return {
+    id: item.id,
+    nome: item.nome,
+    codigo: item.codigo,
+    userId: item.user_id,
+    createdAt: item.created_at,
+  };
+}

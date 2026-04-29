@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { criarCondominio } from "@/lib/condominios";
+import { buscarCondominioPorCodigo, criarCondominio } from "@/lib/condominios";
 import { getSupabase } from "@/lib/supabase";
 
 function extrairBearerToken(authHeader: string | null): string | null {
@@ -9,6 +9,45 @@ function extrairBearerToken(authHeader: string | null): string | null {
   }
 
   return authHeader.slice("Bearer ".length).trim();
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const codigo = searchParams.get("codigo")?.trim().toUpperCase() ?? "";
+
+  if (!codigo) {
+    return NextResponse.json(
+      { erro: "Informe o código do condomínio." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const condominio = await buscarCondominioPorCodigo(codigo);
+
+    if (!condominio) {
+      return NextResponse.json(
+        { erro: "Código de condomínio não encontrado." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      id: condominio.id,
+      nome: condominio.nome,
+      codigo: condominio.codigo,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        erro:
+          error instanceof Error
+            ? error.message
+            : "Erro ao buscar condomínio.",
+      },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
