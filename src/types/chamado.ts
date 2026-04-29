@@ -1,5 +1,6 @@
 export type Chamado = {
   id: string;
+  codigoCondominio: string;
   nome: string;
   apartamento: string;
   mensagem: string;

@@ -107,13 +107,16 @@ export default function MoradorPage() {
     setEstado("enviando");
     setFeedback("");
 
-    const mensagemCompleta = `[Código do condomínio: ${codigoCondominio.trim().toUpperCase()}] ${mensagem}`;
-
     try {
       const response = await fetch("/api/chamados", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, apartamento, mensagem: mensagemCompleta }),
+        body: JSON.stringify({
+          codigoCondominio,
+          nome,
+          apartamento,
+          mensagem,
+        }),
       });
 
       const data = await response.json();
@@ -222,9 +225,6 @@ export default function MoradorPage() {
 
         <Link href="/" className="linkPainel">
           Voltar para escolha de perfil
-        </Link>
-        <Link href="/painel" className="linkPainel">
-          Ver painel de chamados
         </Link>
       </section>
     </main>

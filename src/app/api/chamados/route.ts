@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
 
-import { criarChamado, listarChamados } from "@/lib/chamados";
+import { criarChamado, listarChamadosPorCodigo } from "@/lib/chamados";
+import { buscarCondominioPorCodigo } from "@/lib/condominios";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const codigoCondominio = searchParams.get("codigo")?.trim().toUpperCase() ?? "";
+
+  if (!codigoCondominio) {
+    return NextResponse.json(
+      { erro: "Informe o código do condomínio." },
+      { status: 400 },
+    );
+  }
+
   try {
-    const chamados = await listarChamados();
+    const chamados = await listarChamadosPorCodigo(codigoCondominio);
     return NextResponse.json(chamados);
   } catch (error) {
     return NextResponse.json(
@@ -27,17 +38,34 @@ export async function POST(request: Request) {
 
   const nome = String(body?.nome ?? "").trim();
   const apartamento = String(body?.apartamento ?? "").trim();
+  const codigoCondominio = String(body?.codigoCondominio ?? "")
+    .trim()
+    .toUpperCase();
   const mensagem = String(body?.mensagem ?? "").trim();
 
-  if (!nome || !apartamento || !mensagem) {
+  if (!codigoCondominio || !nome || !apartamento || !mensagem) {
     return NextResponse.json(
-      { erro: "Preencha nome, apartamento e mensagem." },
+      { erro: "Preencha código do condomínio, nome, apartamento e mensagem." },
       { status: 400 },
     );
   }
 
   try {
-    const chamado = await criarChamado({ nome, apartamento, mensagem });
+    const condominio = await buscarCondominioPorCodigo(codigoCondominio);
+
+    if (!condominio) {
+      return NextResponse.json(
+        { erro: "Código de condomínio não encontrado." },
+        { status: 404 },
+      );
+    }
+
+    const chamado = await criarChamado({
+      codigoCondominio,
+      nome,
+      apartamento,
+      mensagem,
+    });
     return NextResponse.json(chamado, { status: 201 });
   } catch (error) {
     return NextResponse.json(

@@ -1,4 +1,4 @@
-import { randomInt } from "crypto";
+import { randomInt, randomUUID } from "crypto";
 
 import { getSupabase } from "@/lib/supabase";
 import { Condominio } from "@/types/condominio";
@@ -25,14 +25,38 @@ function gerarCodigoCondominio(): string {
   return codigo;
 }
 
-export async function criarCondominio(
-  nome: string,
-  userId: string,
-): Promise<Condominio> {
+async function criarUsuarioTecnicoCondominio(): Promise<string> {
   // Supabase sem schema tipado retorna tabelas como `never` no build.
   // Este cast é intencional até adicionarmos tipos gerados do banco.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = getSupabase() as any;
+  const email = `condominio-${randomUUID()}@predex.local`;
+  const password = `${randomUUID()}-${randomUUID()}`;
+
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      origem: "predex-condominio",
+    },
+  });
+
+  if (error || !data?.user) {
+    throw new Error(
+      `Erro ao preparar acesso interno do condomínio: ${error?.message ?? "desconhecido"}`,
+    );
+  }
+
+  return data.user.id;
+}
+
+export async function criarCondominio(nome: string): Promise<Condominio> {
+  // Supabase sem schema tipado retorna tabelas como `never` no build.
+  // Este cast é intencional até adicionarmos tipos gerados do banco.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = getSupabase() as any;
+  const userId = await criarUsuarioTecnicoCondominio();
 
   for (let tentativa = 0; tentativa < MAX_ATTEMPTS; tentativa += 1) {
     const codigo = gerarCodigoCondominio();

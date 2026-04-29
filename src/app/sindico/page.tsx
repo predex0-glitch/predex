@@ -3,45 +3,51 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
-import { getSupabaseBrowser } from "@/lib/supabase-browser";
-
 type EstadoCriacao = "idle" | "enviando" | "sucesso" | "erro";
+type SindicoSalvo = {
+  codigoCondominio: string;
+  nomeCondominio: string;
+};
+
+const STORAGE_KEY = "predex-sindico";
+
+function carregarSindicoSalvo(): SindicoSalvo | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const salvo = window.localStorage.getItem(STORAGE_KEY);
+
+  if (!salvo) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(salvo) as SindicoSalvo;
+  } catch {
+    window.localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
+}
 
 export default function SindicoPage() {
   const [nomeCondominio, setNomeCondominio] = useState("");
   const [estado, setEstado] = useState<EstadoCriacao>("idle");
   const [feedback, setFeedback] = useState("");
+  const [sindicoSalvo, setSindicoSalvo] = useState<SindicoSalvo | null>(
+    carregarSindicoSalvo,
+  );
 
   async function criar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setEstado("enviando");
     setFeedback("");
 
-    let supabaseBrowser;
-    try {
-      supabaseBrowser = getSupabaseBrowser();
-    } catch (error) {
-      setEstado("erro");
-      setFeedback(error instanceof Error ? error.message : "Supabase não configurado.");
-      return;
-    }
-
-    const {
-      data: { session },
-    } = await supabaseBrowser.auth.getSession();
-
-    if (!session?.access_token) {
-      setEstado("erro");
-      setFeedback("Faça login para criar um condomínio.");
-      return;
-    }
-
     try {
       const response = await fetch("/api/condominios", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ nome: nomeCondominio }),
       });
@@ -53,36 +59,76 @@ export default function SindicoPage() {
         return;
       }
 
+      const acesso = {
+        codigoCondominio: data.codigo,
+        nomeCondominio: data.nome,
+      };
+
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(acesso));
+      setSindicoSalvo(acesso);
       setEstado("sucesso");
       setNomeCondominio("");
-      setFeedback(`Condomínio criado com sucesso. Código: ${data.codigo}`);
+      setFeedback(
+        `Condomínio criado com sucesso. Compartilhe o código ${data.codigo} com os moradores.`,
+      );
     } catch {
       setEstado("erro");
       setFeedback("Erro de conexão ao criar condomínio.");
     }
   }
 
+  function limparAcesso() {
+    window.localStorage.removeItem(STORAGE_KEY);
+    setSindicoSalvo(null);
+    setNomeCondominio("");
+    setEstado("idle");
+    setFeedback("");
+  }
+
   return (
     <main className="container">
       <section className="card">
-        <h1>Criar condomínio (Síndico)</h1>
+        <h1>Área do síndico</h1>
         <p className="subtitle">
-          Informe o nome do condomínio. O código único será gerado automaticamente.
+          Cadastre o nome do prédio/condomínio. O código gerado fica salvo neste
+          dispositivo e os moradores usam esse código para entrar.
         </p>
 
-        <form onSubmit={criar} className="formulario">
-          <label htmlFor="nomeCondominio">Nome do condomínio</label>
-          <input
-            id="nomeCondominio"
-            value={nomeCondominio}
-            onChange={(event) => setNomeCondominio(event.target.value)}
-            required
-          />
+        {sindicoSalvo ? (
+          <div className="residenteResumo">
+            <h2>Condomínio salvo neste dispositivo</h2>
+            <p>
+              <strong>Condomínio:</strong> {sindicoSalvo.nomeCondominio}
+            </p>
+            <p>
+              <strong>Código de acesso dos moradores:</strong>
+            </p>
+            <p className="codigoDestaque">{sindicoSalvo.codigoCondominio}</p>
 
-          <button type="submit" disabled={estado === "enviando"}>
-            {estado === "enviando" ? "Criando..." : "Criar"}
-          </button>
-        </form>
+            <div className="acoesResumo">
+              <Link href="/painel" className="botaoPrimarioLink">
+                Ver chamados do condomínio
+              </Link>
+              <button type="button" className="botaoSecundario" onClick={limparAcesso}>
+                Criar outro condomínio
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={criar} className="formulario">
+            <label htmlFor="nomeCondominio">Nome do prédio/condomínio</label>
+            <input
+              id="nomeCondominio"
+              value={nomeCondominio}
+              onChange={(event) => setNomeCondominio(event.target.value)}
+              required
+            />
+
+            <button type="submit" disabled={estado === "enviando"}>
+              {estado === "enviando" ? "Criando..." : "Criar condomínio"}
+            </button>
+          </form>
+        )}
 
         {feedback ? (
           <p className={estado === "erro" ? "feedback erro" : "feedback sucesso"}>
