@@ -1,17 +1,33 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
-  <path d="M16 14H34C40.6274 14 46 19.3726 46 26C46 32.6274 40.6274 38 34 38H26V50H16V14Z" fill="white"/>
-  <path d="M27 23V27H34C35.6569 27 37 25.6569 37 24C37 22.3431 35.6569 21 34 21H27V23Z" fill="url(#accent)"/>
-  <path d="M39 40L51 52H42L33 43L39 40Z" fill="#9DFFB5"/>
   <defs>
-    <linearGradient id="bg" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1E5BB8"/>
-      <stop offset="0.55" stop-color="#2F7EDA"/>
-      <stop offset="1" stop-color="#63C6A0"/>
+    <linearGradient id="icon-blue" x1="8" y1="11" x2="22" y2="55" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2F7EDA"/>
+      <stop offset="1" stop-color="#2364BC"/>
     </linearGradient>
-    <linearGradient id="accent" x1="27" y1="21" x2="37" y2="27" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#D9F0FF"/>
-      <stop offset="1" stop-color="#9DFFB5"/>
+    <linearGradient id="icon-purple" x1="24" y1="4" x2="40" y2="47" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8C60F3"/>
+      <stop offset="1" stop-color="#6A3FE0"/>
+    </linearGradient>
+    <linearGradient id="icon-green" x1="8" y1="49" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#51BC8F"/>
+      <stop offset="1" stop-color="#34B684"/>
     </linearGradient>
   </defs>
+
+  <path d="M8 23L20 14V37H8V23Z" fill="url(#icon-blue)"/>
+  <path d="M44 14L56 23V37H44V14Z" fill="url(#icon-blue)"/>
+  <path d="M23 9L29.5 4V37H23V9Z" fill="url(#icon-purple)"/>
+  <path d="M34.5 4L41 9V37H34.5V4Z" fill="url(#icon-purple)"/>
+
+  <rect x="22" y="24" width="20" height="2.5" fill="white"/>
+  <rect x="7" y="38.5" width="50" height="2.5" fill="white"/>
+  <rect x="7" y="49.5" width="50" height="2.5" fill="white"/>
+  <rect x="21.5" y="9" width="2" height="43" fill="white"/>
+  <rect x="31" y="4" width="2" height="48" fill="white"/>
+  <rect x="40.5" y="9" width="2" height="43" fill="white"/>
+
+  <rect x="8" y="54.5" width="12" height="6.5" fill="url(#icon-green)"/>
+  <rect x="24" y="54.5" width="7" height="6.5" fill="url(#icon-green)"/>
+  <rect x="33" y="54.5" width="7" height="6.5" fill="url(#icon-green)"/>
+  <rect x="44" y="54.5" width="12" height="6.5" fill="url(#icon-green)"/>
 </svg>
